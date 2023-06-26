@@ -50,6 +50,7 @@ int sensitivitas = 66; //tegantung sensor arus yang digunakan, yang ini 25 Amper
 // topic mqtt
 const char* topic1 = "smart_pju_1";
 const char* topic2 = "smart_pju_2";
+const char* topic3 = "smart_pju_3";
 
 // message subscribe topic
 String topic1_input;
@@ -81,6 +82,7 @@ void setup() {
     Serial.println("connected");
 
     client.subscribe(topic2);   // subscribe the topic1
+    client.subscribe(topic3);
 //    topic1_input = client.subscribe(topic2);   // subscribe the topic1
 //    parseStringAndAssignValues(topic1_input, var1, var2, var3, var4, var5);
 
@@ -142,7 +144,7 @@ void loop() {
     snprintf (ldrMsg, LDR_MSG_BUFFER_SIZE, ";%d", resultLDRsensor); 
     snprintf (batteryMsg, VBATTERY_MSG_BUFFER_SIZE, ";%s", string_voltage_battery);
     snprintf (solarMsg, VSOLAR_MSG_BUFFER_SIZE, ";%s", string_voltage_solar);
-    snprintf (currentMsg, ALAMP_MSG_BUFFER_SIZE, ";%s", string_current_lamp);
+    snprintf (currentMsg, ALAMP_MSG_BUFFER_SIZE, ";%s;", string_current_lamp);
 
     // join the result
     // format msq: requestvalue; LDRsensor; lampCurrent; batteryVoltage; solarVoltage
@@ -185,6 +187,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // bikin skenario
 
+  // skenario jika terjadi event di topic2=smart_pju_2
+  if(strcmp(topic,topic2) == 0){ 
+    Serial.println("Ini topic 2");
+  
+  }
+
+  // skenario jika terjadi event di topic3=smart_pju_3
+  if(strcmp(topic,topic3) == 0){ 
+    Serial.println("Ini topic 3");
+  
+  }
+  
 }
 
 //======================================= publising as string =======================================
@@ -227,5 +241,6 @@ void parseStringAndAssignValues(String inputString, String& var1, String& var2, 
 
   if (token != NULL) {
     var5 = String(token);
+    token = strtok(NULL, ";");
   }
 }
