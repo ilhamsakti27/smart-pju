@@ -15,6 +15,8 @@ int LDRSensor = 2;
 #define currentLamp A0
 #define voltageBattery A1
 #define voltageSolar A2
+#define relay1 8
+#define relay2 7
 
 // definisi nilai lain
 unsigned long lastMsg = 0;
@@ -56,7 +58,6 @@ const char* topic3 = "smart_pju_3";
 String topic1_input;
 String var1, var2, var3, var4, var5;
 
-//================================================ setup ================================================
 void setup() {
   Serial.begin(9600);
 //  pinMode(voltageBattery, INPUT);
@@ -83,10 +84,7 @@ void setup() {
 
     client.subscribe(topic2);   // subscribe the topic1
     client.subscribe(topic3);
-//    topic1_input = client.subscribe(topic2);   // subscribe the topic1
-//    parseStringAndAssignValues(topic1_input, var1, var2, var3, var4, var5);
 
-    
   } 
   else {
     Serial.print("\nfailed, rc=");
@@ -147,7 +145,7 @@ void loop() {
     snprintf (currentMsg, ALAMP_MSG_BUFFER_SIZE, ";%s;", string_current_lamp);
 
     // join the result
-    // format msq: requestvalue; LDRsensor; lampCurrent; batteryVoltage; solarVoltage
+    // format msq: requestvalue; LDRsensor; batteryVoltage; solarVoltage; lampCurrent;
     strcat(msg, ldrMsg);
     strcat(msg, batteryMsg);
     strcat(msg, solarMsg);
@@ -174,22 +172,23 @@ void callback(char* topic, byte* payload, unsigned int length) {
 //  }
   
   parseStringAndAssignValues(payload, var1, var2, var3, var4, var5);
-  Serial.print("var1 = ");
-  Serial.println(var1);
-  Serial.print("var2 = ");
-  Serial.println(var2);
-  Serial.print("var3 = ");
-  Serial.println(var3);
-  Serial.print("var4 = ");
-  Serial.println(var4);
-  Serial.print("var5 = ");
-  Serial.println(var5);
-
-  // bikin skenario
+//  Serial.print("var1 = ");
+//  Serial.println(var1);
+//  Serial.print("var2 = ");
+//  Serial.println(var2);
+//  Serial.print("var3 = ");
+//  Serial.println(var3);
+//  Serial.print("var4 = ");
+//  Serial.println(var4);
+//  Serial.print("var5 = ");
+//  Serial.println(var5);
 
   // skenario jika terjadi event di topic2=smart_pju_2
   if(strcmp(topic,topic2) == 0){ 
     Serial.println("Ini topic 2");
+
+    
+    
   
   }
 
@@ -197,7 +196,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if(strcmp(topic,topic3) == 0){ 
     Serial.println("Ini topic 3");
   
-  }
+  } 
   
 }
 
