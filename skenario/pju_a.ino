@@ -43,11 +43,11 @@ float adc_voltage_solar = 0.0;
 float in_voltage_solar = 0.0;
 int adc_value_solar = 0;
 
-int nilaiadc_arus= 0;                   // nilai adc saat pembacaan arus yang menuju ke lampu dengan menggunakan sensor arus
-int teganganoffset_arus = 2500;         // nilai pembacaan offset saat tidak ada arus yang lewat
+int nilaiadc_arus= 0;//nilai adc saat pembacaan arus yang menuju ke lampu dengan menggunakan sensor arus
+int teganganoffset_arus = 2500; //nilai pembacaan offset saat tidak ada arus yang lewat
 float tegangan_arus = 0.0;
-float nilaiarus = 0.0;                  // nilai arus sesungguhnya pada lampu
-int sensitivitas = 66;                  // tegantung sensor arus yang digunakan, yang ini 25 Ampere
+float nilaiarus = 0.0;//nilai arus sesungguhnya pada lampu
+int sensitivitas = 66; //tegantung sensor arus yang digunakan, yang ini 25 Ampere
 
 // topic mqtt
 const char* topic1 = "smart_pju_1";
@@ -56,11 +56,11 @@ const char* topic3 = "smart_pju_3";
 
 // message subscribe topic
 //String requestvalue, LDRsensor, batteryVoltage, solarVoltage, lampCurrent;
-//String var1, var2, var3, var4, var5;
-//String incommingMessage = "";
+String var1, var2, var3, var4, var5;
 
 void setup() {
   Serial.begin(9600);
+//  pinMode(voltageBattery, INPUT);
   while (!Serial) delay(1);
   Ethernet.begin(mac);
   
@@ -69,9 +69,6 @@ void setup() {
   pinMode(LDRSensor, INPUT);
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
-
-//  digitalWrite(relay1, LOW);
-//  digitalWrite(relay2, LOW);
 
   Serial.print("server is at ");
   Serial.println(Ethernet.localIP());
@@ -123,7 +120,18 @@ void loop() {
   adc_voltage_solar = (adc_value_solar * ref_voltage) / 1024.0; 
   in_voltage_solar = (adc_voltage_solar / (R2/(R1+R2))) - 1; 
   char string_voltage_solar[10];
-  dtostrf(in_voltage_solar, 4, 2, string_voltage_solar);   
+  dtostrf(in_voltage_solar, 4, 2, string_voltage_solar);  
+
+  // buka RELAY 2 jika tegangan baterai di bawah 11V
+  if(in_voltage_battery < 11) {
+    digitalWrite(relay2, HIGH);
+  }
+
+  // buka RELAY 1 jika penel rusak
+  if(in_voltage_solar < 11) {
+    digitalWrite(relay1, HIGH);
+  }
+  
   
   // publish sensor values every 3 sec
   unsigned long now = millis();
@@ -142,6 +150,7 @@ void loop() {
     // send sensor result to MQTT broker
     lastMsg = now;
     ++value;
+//    snprintf (msg, MSG_BUFFER_SIZE, "request smart-pju-1 ke #%d", value); //perintah mempersiapkan data untuk dikirim ke mqtt broker
     snprintf (msg, MSG_BUFFER_SIZE, "request smart-pju-1 ke #%d", value); //perintah mempersiapkan data untuk dikirim ke mqtt broker
     snprintf (ldrMsg, LDR_MSG_BUFFER_SIZE, ";%d", resultLDRsensor); 
     snprintf (batteryMsg, VBATTERY_MSG_BUFFER_SIZE, ";%s", string_voltage_battery);
@@ -154,70 +163,60 @@ void loop() {
     strcat(msg, batteryMsg);
     strcat(msg, solarMsg);
     strcat(msg, currentMsg);
-     
-    // buka RELAY 2 jika tegangan baterai di bawah 11V
-    //    (in_voltage_battery < 11) ? digitalWrite(relay2, HIGH) : digitalWrite(relay2, LOW);
-    if(in_voltage_battery < 11) {
-      digitalWrite(relay2, HIGH);
-      digitalWrite(relay2, LOW);
-      Serial.print("in_voltage_battery : ");
-      Serial.println(in_voltage_battery);
-    }
-  
-    // buka RELAY 1 jika penel rusak
-    //    (in_voltage_solar < 11) ? digitalWrite(relay2, HIGH) : digitalWrite(relay2, LOW);
-    if(in_voltage_solar < 11) {
-      digitalWrite(relay1, HIGH);
-      digitalWrite(relay1, LOW);
-      Serial.print("in_voltage_solar : ");
-      Serial.println(in_voltage_solar);
-    }
 
     // publish message
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    client.publish(topic1, msg);   
+//    Serial.print("Publish message: ");
+//    Serial.println(msg);
+//    client.publish(topic1, msg);    // comment dulu dek
   }
 }
 
 //======================================= This void is called every time we have a message from the broker =======================================
 void callback(char* topic, byte* payload, unsigned int length) {
   String incommingMessage = "";
-  String var1, var2, var3, var4, var5 = "";
   for (int i = 0; i < length; i++) incommingMessage+=(char)payload[i];
   
   Serial.println("Message arrived ["+String(topic)+"]"+incommingMessage);
   
-  
-  Serial.print("mesg: ");
-  Serial.println(incommingMessage);
-//  parseStringAndAssignValues(incommingMessage1, requestvalue, LDRsensor, batteryVoltage, solarVoltage, lampCurrent);
-  parseStringAndAssignValues(payload, var1, var2, var3, var4, var5);
-//  parseStringAndAssignValues(payload, requestvalue, LDRsensor, batteryVoltage, solarVoltage, lampCurrent);
+    // check the incomming message from topic 1
+//    if( strcmp(topic,topic1) == 0){
+//     if (incommingMessage.equals("1")) digitalWrite(LED_PIN, LOW);   // Turn the LED on 
+//     else digitalWrite(LED_PIN, HIGH);  // Turn the LED off 
+//  }
 
-  Serial.print("requestvalue = ");
+  // format msq: requestvalue; LDRsensor; batteryVoltage; solarVoltage; lampCurrent;
+//  parseStringAndAssignValues(payload, requestvalue, LDRsensor, batteryVoltage, solarVoltage, lampCurrent);
+  parseStringAndAssignValues(payload, var1, var2, var3, var4, var5);
+//  Serial.print("var1 = ");
+//  Serial.println(requestvalue);
+//  Serial.print("var2 = ");
+//  Serial.println(LDRsensor);
+//  Serial.print("var3 = ");
+//  Serial.println(batteryVoltage);
+//  Serial.print("var4 = ");
+//  Serial.println(solarVoltage);
+//  Serial.print("var5 = ");
+//  Serial.println(lampCurrent);
+
+  Serial.print("var1 = ");
   Serial.println(var1);
-  Serial.print("LDRsensor = ");
+  Serial.print("var2 = ");
   Serial.println(var2);
-  Serial.print("batteryVoltage = ");
+  Serial.print("var3 = ");
   Serial.println(var3);
-  Serial.print("solarVoltage = ");
+  Serial.print("var4 = ");
   Serial.println(var4);
-  Serial.print("lampCurrent = ");
+  Serial.print("var5 = ");
   Serial.println(var5);
 
   // skenario jika terjadi event di topic2=smart_pju_2
   if(strcmp(topic,topic2) == 0){ 
     Serial.println("Ini topic 2");
     
-    if(var3.toInt() < 11 || var4.toInt() < 11) {
+    if(var3 < 11 || var4 < 11) {
         digitalWrite(relay1, HIGH);
-        digitalWrite(relay1, LOW);
-    } 
-    else {
-      digitalWrite(relay1, LOW);
-      digitalWrite(relay1, HIGH);
     }
+  
   }
 
   // skenario jika terjadi event di topic3=smart_pju_3
@@ -225,14 +224,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("Ini topic 3");
     
     // skenario empat
-    if(var3.toInt() < 11 || var4.toInt() < 11) {
+    if(var3 < 11 || var4 < 11) {
         digitalWrite(relay1, HIGH);
-        digitalWrite(relay1, LOW);
     }
-    else {
-      digitalWrite(relay1, LOW);
-      digitalWrite(relay1, HIGH);
-    }
+
   } 
   
 }
@@ -243,7 +238,7 @@ void publishMessage(const char* topic, String payload , boolean retained){
       Serial.println("Message publised ["+String(topic)+"]: "+payload);
 }
 
-// requestvalue, LDRsensor, batteryVoltage, solarVoltage, lampCurrent);
+// 
 void parseStringAndAssignValues(String inputString, String& var1, String& var2, String& var3, String& var4, String& var5) {
   char *token;
   char *str;
